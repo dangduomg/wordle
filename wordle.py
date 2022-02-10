@@ -2,28 +2,36 @@ from random import randint
 from re import split
 from colorama import init
 
-data_file = open("words.txt", "r")
-data = data_file.read()
-data_file.close()
+# Import words
+with open("words.txt") as f:
+    words = split(r"\s+", f.read())
 
 class Result:
-    def redundant_letters(self):
-        return [x[0] for x in self.res if x[1] == 0]
+    GREY = 0
+    YELLOW = 1
+    GREEN = 2
 
+    # Returns all grey letters
+    def redundant_letters(self):
+        return [x[0] for x in self.res if x[1] == Result.GREY]
+
+    # Checks if all letters are green (win condition)
     def is_win(self):
         for x in self.res:
             color = x[1]
-            if color != 2:
+            if color != Result.GREEN:
                 return False
         return True
+
+    # These are obvious
 
     def __str__(self):
         string = ""
         for x in self.res:
             letter, color = x
-            if color == 2:
+            if color == Result.GREEN:
                 string += "\033[32m" + letter + "\033[m"
-            elif color == 1:
+            elif color == Result.YELLOW:
                 string += "\033[33m" + letter + "\033[m"
             else:
                 string += letter
@@ -34,35 +42,39 @@ class Result:
         if len(guess) != len(answer):
             raise ValueError
         for i in range(len(guess)):
-            color = 0
+            color = Result.GREY
             if guess[i] == answer[i]:
-                color = 2
+                color = Result.GREEN
             elif guess[i] in answer:
-                color = 1
+                color = Result.YELLOW
             self.res.append((guess[i], color))
 
-# game
+# Game
 
 init()
 
 print("wordle game")
-print("\033[32mgreen\033[m = correct letter, correct position")
-print("\033[33myellow\033[m = correct letter, incorrect postition")
+print("\033[32mgreen\033[m = Correct letter, correct position")
+print("\033[33myellow\033[m = Correct letter, incorrect postition")
 print()
 
-while True:        
-    words = split(r"\s+", data)
+while True:
+    # Initialize answer and letters
     answer = words[randint(0, len(words) - 1)]
     letters = [chr(i) for i in range(97, 123)]
+    # Main loop
     while True:
-        print("\033[91mletters: " + " ".join(letters) + "\033[m")
+        print("\033[91mLetters: " + " ".join(letters) + "\033[m")
         guess = input("> ")
         result = Result(guess, answer)
         letters = [x for x in letters if x not in result.redundant_letters()]
         print(result)
         if result.is_win():
-            print("you won the game!")
+            print("You won the game!")
             break
-    play_again = input("play again?(y/n) ")
-    if play_again != "y":
+    while True:
+        play_again = input("Play again?(y/n) ").lower()
+        if play_again == "y" or play_again == "n":
+            break
+    if play_again == "n":
         break
